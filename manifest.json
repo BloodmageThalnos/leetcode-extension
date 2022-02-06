@@ -16,7 +16,7 @@
 		{
 			"matches": ["http://leetcode-cn.com/*", "https://leetcode-cn.com/*"],
 			"js": ["jquery.js", "do.js"],
-			"run_at": "document_idle"
+			"run_at": "document_start"
 		}
 	],
 	"permissions":
@@ -29,7 +29,11 @@
 		"tabs",
 		"webRequest",
 		"http://*/*",
-		"https://*/*"
+		"https://*/*",
+		"file://*"
+	],
+	"web_accessible_resources": [
+		"data/*"
 	],
 	"homepage_url": "http://littledva.cn/home/"
 }
