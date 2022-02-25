@@ -51,15 +51,14 @@ string to_string(tuple<A, B, C> t){\n\
     return "(" + sA + "," + (sA.length()>7?"\\n":" ") + sB + "," + (sB.length()>7?"\\n":" ") + sC + ")";\n\
 }\n\
 template<typename A>string to_string(A v) {\n\
-    bool first = true;\n\
+    int count = 0;\n\
     string res = "{";\n\
     for(const auto &x : v) {\n\
-        if(!first) { res += ", "; }\n\
-        first = false;\n\
+        if(count++) { res += ", "; }\n\
+        if(count>4 && res.length()>64) { res += ".."; break;}\n\
         res += to_string(x);\n\
     }\n\
-    res += "}";\n\
-    return res;\n\
+    return res + '}';\n\
 }\n\
 void debug() { cout << endl; }\n\
 template<typename Head, typename... Tail>\n\
