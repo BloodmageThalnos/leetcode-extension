@@ -116,20 +116,20 @@ typedef long long ll;';
             let regex = /(?<prefix>(\/\*[^\/]+\/\n)?class (?<class_name>[a-zA-Z0-9]*) {\npublic:\s*)(?<return_type>[a-zA-Z0-9<>\*&]*|long long|vector<long long>) (?<func_name>[a-zA-Z0-9]*)\((?<parameters>.*)\) {\s*\n(?<postfix> *}\s*}[\s\S]*)/g;
             result = regex.exec(code);
             if(result){
-                data = result.groups; // class_name, return_type, func_name, parameters
-                return_type = data.return_type;
-                func_name = data.func_name;
-                parameters = data.parameters;
+                let data = result.groups; // class_name, return_type, func_name, parameters
+                let return_type = data.return_type;
+                let func_name = data.func_name;
+                let parametes = data.parameters;
                 let regex2 = /(?<type>[a-zA-Z0-9<>\*&]+|long long|vector<long long>) (?<var>[a-zA-Z0-9]+)/g;
-                para_list = []
-                used_vars = []
-                renamed_vars = {}
-                for(let result2; result2 = regex2.exec(parameters);){
+                let para_list = []
+                let used_vars = []
+                let renamed_vars = {}
+                for(let result2; result2 = regex2.exec(parametes);){
                     para_list.push([result2.groups?.type, result2.groups?.var]);
                     used_vars.push(result2.groups?.var);
                 }
                 
-                generated = "";
+                let generated = "";
                 add_line = (x)=>{
                     generated += '        '+x+'\n';
                 };
@@ -142,7 +142,6 @@ typedef long long ll;';
                 let one_dimention_types = ["vector<int>", "vector<double>", "string"];
                 let two_dimention_types = ["vector<vector<int>>", "vector<string>"];
                 let single_types = ["int", "double", "long long"];
-                let rename_s_count = 0, rename_k_count = 0;
                 get_var_name = (prefix, alter='')=>{
                     if(!used_vars.includes(prefix) && !(prefix in renamed_vars)) {
                         used_vars.push(prefix);
@@ -164,7 +163,6 @@ typedef long long ll;';
                     for(let j of one_dimention_types){
                         if(type.indexOf(j) == 0){
                             if(name.length > 3){
-                                rename_s_count++;
                                 let new_name = get_var_name('s', 't');
                                 renamed_vars[new_name] = name;
                                 name = para_list[i][1] = new_name;
@@ -175,7 +173,6 @@ typedef long long ll;';
                     for(let j of two_dimention_types){
                         if(type.indexOf(j) == 0){
                             if(name.length > 3){
-                                rename_s_count++;
                                 let new_name = get_var_name('s', 't');
                                 renamed_vars[new_name] = name;
                                 name = para_list[i][1] = new_name;
@@ -186,7 +183,6 @@ typedef long long ll;';
                     for(let j of single_types){
                         if(type.indexOf(j) == 0){
                             if(name.length > 3){
-                                rename_k_count++;
                                 let new_name = get_var_name('k');
                                 renamed_vars[new_name] = name;
                                 name = para_list[i][1] = new_name;
@@ -215,12 +211,12 @@ typedef long long ll;';
                     add_line(`return ans;`);
                 }
 
-                parameters = "";
+                parametes = '';
                 for(let p in para_list){
-                    parameters += `${para_list[p][0]} ${para_list[p][1]}`;
-                    if(p<para_list.length-1) parameters += ", ";
+                    parametes += `${para_list[p][0]} ${para_list[p][1]}`;
+                    if(p<para_list.length-1) parametes += ", ";
                 }
-                first_line = `__attribute__((no_sanitize("all")))\n    ${return_type} ${func_name}(${parameters}) {\n`;
+                first_line = `__attribute__((no_sanitize("all")))\n    ${return_type} ${func_name}(${parametes}) {\n`;
                 if(Object.keys(renamed_vars).length){
                     first_line += '        //';
                     for(let v in renamed_vars){
@@ -256,7 +252,6 @@ typedef long long ll;';
         
         let code = m.getValue();
         if(checkHeader(code, lang)){
-            //m.setValue(autoEdit(code, lang));
             m.setValue(addHeader(autoEdit(code, lang), lang));
         }
     }
@@ -277,15 +272,24 @@ typedef long long ll;';
 
     if(window.pageData) {
         let cpp_code = pageData.codeDefinition[0].defaultCode;
-        pageData.codeDefinition[0].defaultCode = (
-            addHeader(autoEdit(cpp_code, 'cpp'), 'cpp')
-            );
+        let cpp_code_edited = addHeader(autoEdit(cpp_code, 'cpp'), 'cpp');
+        pageData.codeDefinition[0].defaultCode = cpp_code_edited;
+
         let python3_code = pageData.codeDefinition[3].defaultCode;
-        pageData.codeDefinition[3].defaultCode = (
-            addHeader(autoEdit(python3_code, 'python3'), 'python3')
-            );
+        let python3_code_edited = addHeader(autoEdit(python3_code, 'python3'), 'python3');
+        pageData.codeDefinition[3].defaultCode = python3_code_edited;
 
         setTimeout(()=>{
+            let mirror = document.querySelector('.CodeMirror')?.CodeMirror;
+            let lang = document.querySelector('input[name=lang-select]').value;
+            if(lang === "python3"){
+                mirror.getDoc().setValue(python3_code_edited);
+            }
+            else if(lang === "cpp"){
+                mirror.getDoc().setValue(cpp_code_edited);
+            }
+            mirror.getDoc().setCursor(mirror.lineCount() - 14, 8, {scroll: false});
+
             let source = pageData.questionSourceContent.replace(/<[^>]*>?/gm, '');
             let test_input = "";
             let get_inputs = /Input:(.*)\n/g;
@@ -303,7 +307,7 @@ typedef long long ll;';
                 let target = $('.testCaseInputArea');
                 change_react_value(target[0], test_input);
             }
-        }, 3000);
+        }, 1500);
     }
 }
 
