@@ -69,9 +69,8 @@ template<typename A>string to_string(A v) {\n\
 #define debug(...) DEBUG__(_0,__VA_ARGS__,DEBUG_4,DEBUG_3,DEBUG_2,DEBUG_1)(DEBUG_IMPL,__VA_ARGS__)\n\
 template<typename T>\n\
 void debug_impl(const char* name, T x) {\n\
-    cout << name << " " << to_string(x) << endl;\n\
+    cout << name << ": " << to_string(x) << endl;\n\
 }\n\
-// __attribute__((no_sanitize("all")))\n\
 static int x=[](){\n\
     std::ios::sync_with_stdio(false);\n\
     cin.tie(NULL);\n\
@@ -99,14 +98,14 @@ typedef long long ll;';
         if(lang==="python3"){
             return '##### Template \n'
             + HEADER_PY
-            + ' \n\n##### Solution \n'
+            + ' \n\n'
             + code
             + '\t\t\n\n\n\n\n\n\n\n\n';
         }
         else if(lang==="cpp"){
             return '///// Template \n'
             + HEADER_CPP
-            + ' \n\n///// Solution \n'
+            + ' \n\n'
             + code
             + '\t\t\n\n\n\n\n\n\n\n\n'
         }
@@ -114,20 +113,21 @@ typedef long long ll;';
 
     function autoEdit(code, lang){
         if(lang==="cpp"){
-            let regex = /(?<prefix>(\/\*[^\/]+\/\n)?class (?<class_name>[a-zA-Z0-9]*) {\npublic:\s*(?<return_type>[a-zA-Z0-9<>\*&]*) (?<func_name>[a-zA-Z0-9]*)\((?<parameters>.*)\) {\n)\s*\n(?<postfix> +}\s*}[\s\S]*)/g;
+            let regex = /(?<prefix>(\/\*[^\/]+\/\n)?class (?<class_name>[a-zA-Z0-9]*) {\npublic:\s*)(?<return_type>[a-zA-Z0-9<>\*&]*|long long|vector<long long>) (?<func_name>[a-zA-Z0-9]*)\((?<parameters>.*)\) {\s*\n(?<postfix> *}\s*}[\s\S]*)/g;
             result = regex.exec(code);
             if(result){
-                console.log(result.groups);
                 data = result.groups; // class_name, return_type, func_name, parameters
                 return_type = data.return_type;
                 func_name = data.func_name;
                 parameters = data.parameters;
-                let regex2 = /(?<type>[a-zA-Z0-9<>\*&]+) (?<var>[a-zA-Z0-9]+)/g;
+                let regex2 = /(?<type>[a-zA-Z0-9<>\*&]+|long long|vector<long long>) (?<var>[a-zA-Z0-9]+)/g;
                 para_list = []
+                used_vars = []
+                renamed_vars = {}
                 for(let result2; result2 = regex2.exec(parameters);){
                     para_list.push([result2.groups?.type, result2.groups?.var]);
+                    used_vars.push(result2.groups?.var);
                 }
-                console.log(return_type, func_name, para_list);
                 
                 generated = "";
                 add_line = (x)=>{
@@ -138,28 +138,64 @@ typedef long long ll;';
                 });
                 
                 // Generate  *.size()  for vectors and strings
+                // Auto rename the first vector/string
                 let one_dimention_types = ["vector<int>", "vector<double>", "string"];
                 let two_dimention_types = ["vector<vector<int>>", "vector<string>"];
-                let siz_var_count = 0;
-                get_var_name = ()=>{
-                    if(++siz_var_count==1) return "n";
-                    return "n"+siz_var_count;
+                let single_types = ["int", "double", "long long"];
+                let rename_s_count = 0, rename_k_count = 0;
+                get_var_name = (prefix, alter='')=>{
+                    if(!used_vars.includes(prefix) && !(prefix in renamed_vars)) {
+                        used_vars.push(prefix);
+                        return prefix;
+                    }
+                    if(alter && !used_vars.includes(alter) && !(alter in renamed_vars)) {
+                        used_vars.push(alter);
+                        return alter;
+                    }
+                    for(let siz_var_count=2;; siz_var_count++) {
+                        if(!used_vars.includes(prefix+siz_var_count) && !(prefix+siz_var_count) in renamed_vars){
+                            used_vars.push(prefix+siz_var_count);
+                            return prefix+siz_var_count;
+                        }
+                    }
                 };
                 for(let i in para_list){
                     let type = para_list[i][0], name = para_list[i][1];
                     for(let j of one_dimention_types){
                         if(type.indexOf(j) == 0){
-                            add_line(`int ${get_var_name()} = ${name}.size();`);
+                            if(name.length > 3){
+                                rename_s_count++;
+                                let new_name = get_var_name('s', 't');
+                                renamed_vars[new_name] = name;
+                                name = para_list[i][1] = new_name;
+                            }
+                            add_line(`int ${get_var_name("n", "m")} = ${name}.size();`);
                         }
                     }
                     for(let j of two_dimention_types){
                         if(type.indexOf(j) == 0){
-                            add_line(`int ${get_var_name()} = ${name}.size();`);
+                            if(name.length > 3){
+                                rename_s_count++;
+                                let new_name = get_var_name('s', 't');
+                                renamed_vars[new_name] = name;
+                                name = para_list[i][1] = new_name;
+                            }
+                            add_line(`int ${get_var_name("n", "m")} = ${name}.size();`);
+                        }
+                    }
+                    for(let j of single_types){
+                        if(type.indexOf(j) == 0){
+                            if(name.length > 3){
+                                rename_k_count++;
+                                let new_name = get_var_name('k');
+                                renamed_vars[new_name] = name;
+                                name = para_list[i][1] = new_name;
+                            }
                         }
                     }
                 }
 
-                // Generate return value;
+                // Generate return value
                 if(return_type !== "void"){
                     if(return_type === "int" || return_type === "long long" || return_type === "double"){
                         add_line(`${return_type} ans = 0;`);
@@ -178,9 +214,22 @@ typedef long long ll;';
                 if(return_type != "void"){
                     add_line(`return ans;`);
                 }
-                console.log(generated);
 
-                return data.prefix + generated + data.postfix;
+                parameters = "";
+                for(let p in para_list){
+                    parameters += `${para_list[p][0]} ${para_list[p][1]}`;
+                    if(p<para_list.length-1) parameters += ", ";
+                }
+                first_line = `__attribute__((no_sanitize("all")))\n    ${return_type} ${func_name}(${parameters}) {\n`;
+                if(Object.keys(renamed_vars).length){
+                    first_line += '        //';
+                    for(let v in renamed_vars){
+                        first_line += `${v}: ${renamed_vars[v]}  `;
+                    }
+                    first_line += '\n';
+                }
+
+                return data.prefix + first_line + generated + data.postfix;
             }
         }
         return code;
@@ -229,11 +278,11 @@ typedef long long ll;';
     if(window.pageData) {
         let cpp_code = pageData.codeDefinition[0].defaultCode;
         pageData.codeDefinition[0].defaultCode = (
-            addHeader(cpp_code, 'cpp')
+            addHeader(autoEdit(cpp_code, 'cpp'), 'cpp')
             );
         let python3_code = pageData.codeDefinition[3].defaultCode;
         pageData.codeDefinition[3].defaultCode = (
-            addHeader(python3_code, 'python3')
+            addHeader(autoEdit(python3_code, 'python3'), 'python3')
             );
 
         setTimeout(()=>{
