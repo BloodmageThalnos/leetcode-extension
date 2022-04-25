@@ -141,7 +141,7 @@ typedef long long ll;';
                 // Auto rename the first vector/string
                 let one_dimention_types = ["vector<int>", "vector<double>", "string"];
                 let two_dimention_types = ["vector<vector<int>>", "vector<string>"];
-                let single_types = ["int", "double", "long long"];
+                let single_types = ["int", "double", "bool", "long long"];
                 get_var_name = (prefix, alter='')=>{
                     if(!used_vars.includes(prefix) && !(prefix in renamed_vars)) {
                         used_vars.push(prefix);
@@ -152,7 +152,7 @@ typedef long long ll;';
                         return alter;
                     }
                     for(let siz_var_count=2;; siz_var_count++) {
-                        if(!used_vars.includes(prefix+siz_var_count) && !(prefix+siz_var_count) in renamed_vars){
+                        if(!used_vars.includes(prefix+siz_var_count) && !((prefix+siz_var_count) in renamed_vars)){
                             used_vars.push(prefix+siz_var_count);
                             return prefix+siz_var_count;
                         }
@@ -195,6 +195,9 @@ typedef long long ll;';
                 if(return_type !== "void"){
                     if(return_type === "int" || return_type === "long long" || return_type === "double"){
                         add_line(`${return_type} ans = 0;`);
+                    }
+                    else if(return_type === "bool"){
+                        add_line(`${return_type} ans = false;`);
                     }
                     else if(return_type === "string"){
                         add_line(`${return_type} ans = "";`);
@@ -290,15 +293,32 @@ typedef long long ll;';
             }
             mirror.getDoc().setCursor(mirror.lineCount() - 14, 8, {scroll: false});
 
-            let source = pageData.questionSourceContent.replace(/<[^>]*>?/gm, '');
+            let source = pageData.questionContent.replace(/<[^>]*>?/gm, '');
             let test_input = "";
-            let get_inputs = /Input:(.*)\n/g;
+            let get_inputs = /输入(：|:)([\s\S]*?)输出(：|:)/g;
             for(let result; result = get_inputs.exec(source);){
-                content = result[1];
-                let get_value = / = (\[.*\]|".*"|[0-9]+)/g;
-                for(let result2; result2 = get_value.exec(content);){
-                    value = result2[1];
-                    test_input += value + '\n';
+                // TESTCASES:
+                // cnunionpay-2022spring/problems/kDPV0f/
+                // cnunionpay-2022spring/problems/D7rekZ/
+                // weekly-contest-284/problems/count-artifacts-that-can-be-extracted/
+                // weekly-contest-287/problems/encrypt-and-decrypt-strings/
+                // weekly-contest-290/problems/number-of-flowers-in-full-bloom/
+                
+                content = result[2];
+                content = content.replaceAll(/(^|\n)> ?/g, '');
+                content = content.replaceAll('`', '');
+                if(content[0] === '\n') content = content.substr(1);
+                console.log(content);
+                if(content.indexOf(' = ') !== -1){
+                    get_value = / = (\[.*?\]|".*?"|[0-9]+)($|\n|, )/g;
+                    for(let result2; result2 = get_value.exec(content);){
+                        value = result2[1];
+                        test_input += value + '\n';
+                        if(test_input.length > 1000) break;
+                    }
+                }
+                else{
+                    test_input += content;
                 }
             }
             console.log(test_input);
