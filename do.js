@@ -40,6 +40,7 @@ mod = 10**9+7";
 string to_string(const char *s) { return to_string((string) s); }\n\
 string to_string(bool b) { return (b ? "true" : "false"); }\n\
 string to_string(short s) { return to_string((int)s); }\n\
+string to_string(char c) { return string(1, c); }\n\
 template<typename A, typename B>\n\
 string to_string(pair<A, B> p) {\n\
     string sA = to_string(p.first), sB = to_string(p.second);\n\
@@ -71,6 +72,10 @@ template<typename T>\n\
 void debug_impl(const char* name, T x) {\n\
     cout << name << ": " << to_string(x) << endl;\n\
 }\n\
+#define v2d(name, d1, d2, val) vector<vector<int>> name(d1, vector<int>(d2, val));\n\
+#define v2dll(name, d1, d2, val) vector<vector<ll>> name(d1, vector<ll>(d2, val));\n\
+#define v3d(name, d1, d2, d3, val) vector<vector<vector<int>>> name(d1, vector<vector<int>>(d2, vector<int>(d3, val)));\n\
+#define v3dll(name, d1, d2, d3, val) vector<vector<vector<ll>>> name(d1, vector<vector<ll>>(d2, vector<ll>(d3, val)));\n\
 static int x=[](){\n\
     std::ios::sync_with_stdio(false);\n\
     cin.tie(NULL);\n\
@@ -251,7 +256,6 @@ typedef long long ll;';
         let lang = m._languageIdentifier.language;
 
         monaco.languages.setLanguageConfiguration(lang,{autoClosingPairs:[],surroundingPairs:[]});
-        log("SUCCESS: set autoBracketing=False for "+lang);
         
         let code = m.getValue();
         if(checkHeader(code, lang)){
@@ -308,7 +312,6 @@ typedef long long ll;';
                 content = content.replaceAll(/(^|\n)> ?/g, '');
                 content = content.replaceAll('`', '');
                 if(content[0] === '\n') content = content.substr(1);
-                console.log(content);
                 if(content.indexOf(' = ') !== -1){
                     get_value = / = (\[.*?\]|".*?"|[0-9]+)($|\n|, )/g;
                     for(let result2; result2 = get_value.exec(content);){
@@ -321,7 +324,6 @@ typedef long long ll;';
                     test_input += content;
                 }
             }
-            console.log(test_input);
             if(test_input){
                 set_checked('#custom_testcase');
                 let target = $('.testCaseInputArea');

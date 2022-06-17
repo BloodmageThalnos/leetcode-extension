@@ -1,7 +1,7 @@
 {
 	"manifest_version": 2,
 	"name": "leetcode-extention-littledva",
-	"version": "1.0.0",
+	"version": "1.2.0",
 	"description": "Leetcode插件 by Littledva",
 	"background":
 	{
@@ -14,7 +14,7 @@
 	"content_scripts": 
 	[
 		{
-			"matches": ["http://leetcode-cn.com/*", "https://leetcode-cn.com/*"],
+			"matches": ["http://leetcode.cn/*", "https://leetcode.cn/*"],
 			"js": ["jquery.js", "do.js"],
 			"run_at": "document_start"
 		}
@@ -29,8 +29,7 @@
 		"tabs",
 		"webRequest",
 		"http://*/*",
-		"https://*/*",
-		"file://*"
+		"https://*/*"
 	],
 	"web_accessible_resources": [
 		"data/*"
