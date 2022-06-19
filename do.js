@@ -295,6 +295,14 @@ typedef long long ll;';
             else if(lang === "cpp"){
                 mirror.getDoc().setValue(cpp_code_edited);
             }
+            setTimeout(()=>{
+                if(lang === "python3"){
+                    mirror.getDoc().setValue(python3_code_edited);
+                }
+                else if(lang === "cpp"){
+                    mirror.getDoc().setValue(cpp_code_edited);
+                }
+            }, 200);
             mirror.getDoc().setCursor(mirror.lineCount() - 14, 8, {scroll: false});
 
             let source = pageData.questionContent.replace(/<[^>]*>?/gm, '');
